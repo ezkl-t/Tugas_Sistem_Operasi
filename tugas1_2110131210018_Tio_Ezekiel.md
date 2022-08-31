@@ -4,7 +4,7 @@
 
 Laptop yang saya gunakan adalah ASUS TUF A15 berseri FA506QM. Berikut tampilan laptop yang saya gunakan:
 
-![my laptop](/img/lepi.jpg)
+![my laptop](/img/lepii.jpg)
 
 ## Sistem Operasi
 
