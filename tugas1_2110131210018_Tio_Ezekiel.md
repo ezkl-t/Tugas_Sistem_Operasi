@@ -1,13 +1,13 @@
 # Tugas Mendeskripsikan dengan Markdown
 
 ## Laptop
-<pre>
+
 Laptop yang saya gunakan adalah ASUS TUF A15 berseri FA506QM. Berikut tampilan laptop yang saya gunakan:<br>
-<center><img src="img/lepii.jpg" width="60%"></center></pre>
+<center><img src="img/lepii.jpg" width="60%"></center>
 
 ## Sistem Operasi
 
-<pre>
+
 Sistem operasi yang saya gunakan adalah Windows 10 Home. Berikut spesifikasi lengkap sistem operasi laptop saya untuk sekarang:
 - Edition	Windows 10 Home Single Language
 - Version	21H2
@@ -15,40 +15,40 @@ Sistem operasi yang saya gunakan adalah Windows 10 Home. Berikut spesifikasi len
 - OS build	19044.1889
 - Experience	Windows Feature Experience Pack 120.2212.4180.0
 Sistem operasi bermanfaat untuk menjadi jembatan antara hardware dan software juga kita sebagai user/pengguna.
-</pre>
+
 
 ## Prosesor
 
-<pre>
+
 
 Laptop saya menggunakan prosesor dari AMD yaitu AMD Ryzen 7 5800H.
 Prosesor berguna sebagai ...
-</pre>
+
 
 ## Software
 
-<pre>
+
 Software yang sering saya gunakan ada berbagai macam. Contohnya seperti yang sedang ada di taskbar saya ini.
 <center><img src="img/frequently_use_software.png"> </center>
 Dari kiri ke kanan terdapat File Explorer, Office, Discord, Chrome, Spotify, VSCode, Xbox, dan WhatsApp.
-</pre>
+
 
 ## Hardware
 
-<pre>
+
 Dan berikut adalah hardware yang tidak bisa jauh dari saya:<br>
 <center><img src="img/hardware.jpg" width="60%"></center>
 Terdapat mouse (Razer Viper Mini), stik (controller PS4), earset wired (KZ ZSN), earset wireless (Edifier X3s), mousepad (NYK Nemesis), mouse bungee (no brand), dan juga ada WiFi dongle (tp-link TL-WN725N).<br>
 Hardware berguna untuk mendukung kerja komputer, menampilkan atau menerima input (masukan) proses, mengolah data/informasi, memberikan output, serta menyimpan data/informasi yang terpasang di dalam maupun di luar komputer.
-</pre>
+
 
 ## Penyimpanan
 
-<pre>
+
 Penyimpanan laptop saya hanya ada satu yang ada di laptop ini yaitu SSD 512GB NVMe PCIe M2 bermerk hynix.
 <center><img src="img/hynix.jfif"></center>
 Penyimpanan atau storage berguna untuk menyimpan berbagai macam data digital yang tersedia pada perangkat komputer dengan waktu tertentu sehingga dapat dibaca dan dibuka kembali untuk diproses ulang pada perangkat.
-</pre>
+
 &nbsp;
 
 # Sejarah Komputer
