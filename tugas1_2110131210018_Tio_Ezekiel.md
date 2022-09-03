@@ -38,7 +38,7 @@ Dari kiri ke kanan terdapat File Explorer, Office, Discord, Chrome, Spotify, VSC
 
 Dan berikut adalah hardware yang tidak bisa jauh dari saya:<br>
 <center><img src="img/hardware.jpg" width="60%"></center>
-Terdapat mouse (Razer Viper Mini), stik (controller PS4), earset wired (KZ ZSN), earset wireless (Edifier X3s), mousepad (NYK Nemesis), mouse bungee (no brand), dan juga ada WiFi dongle (tp-link TL-WN725N).<br>
+Terdapat mouse (Razer Viper Mini), stik (controller PS4), earset wired (KZ ZSN), earset wireless (Edifier X3s), dan juga ada WiFi dongle (tp-link TL-WN725N).<br>
 Hardware berguna untuk mendukung kerja komputer, menampilkan atau menerima input (masukan) proses, mengolah data/informasi, memberikan output, serta menyimpan data/informasi yang terpasang di dalam maupun di luar komputer.
 
 
