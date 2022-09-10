@@ -3,7 +3,7 @@
 ## Laptop
 
 Laptop yang saya gunakan adalah ASUS TUF A15 berseri FA506QM. Berikut tampilan laptop yang saya gunakan:<br>
-<center><img src="img/lepii.jpg" width="60%"></center>
+<p align="center" ><img src="img/lepii.jpg" width="60%"></p>
 
 ## Sistem Operasi
 
@@ -29,7 +29,7 @@ Prosesor berguna sebagai ...
 
 
 Software yang sering saya gunakan ada berbagai macam. Contohnya seperti yang sedang ada di taskbar saya ini.
-<center><img src="img/frequently_use_software.png"> </center>
+<center><img allign="center" src="img/frequently_use_software.png"> </center>
 Dari kiri ke kanan terdapat File Explorer, Office, Discord, Chrome, Spotify, VSCode, Xbox, dan WhatsApp.
 
 
