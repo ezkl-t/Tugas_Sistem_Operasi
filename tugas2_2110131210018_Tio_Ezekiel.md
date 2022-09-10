@@ -150,7 +150,207 @@ Developing and maintaining two completely different product lines was an expensi
 
 IBM attempted to solve both of these problems at a single stroke by introducing the System/360. The 360 was a series of software-compatible machines ranging  from  1401-sized  models  to  much  larger  ones,  more  powerful  than  the  mighty 7094. The machines  differed  only  in  price  and  performance  (maximum  memory, processor speed, number of I/O devices permitted, and so forth). Since they all had the same architecture and instruction set, programs written for one machine could run  on  all  the  others—at  least  in  theory. (But  as  Yogi  Berra  reputedly  said:  ‘‘In theory, theory and practice are the same; in practice, they are not.’’) Since the 360 was designed to handle both scientific (i.e., numerical) and commercial computing, a single family of machines could satisfy the needs of all customers. In subsequent years,  IBM  came  out  with  backward  compatible  successors  to  the  360  line,  using more modern technology, known as the 370, 4300, 3080, and 3090. The zSeries is the most recent descendant of this line, although it has diverged considerably from the original.
 
-The IBM 360 was the first major computer line to use (small-scale) **ICs (Integrated  Circuits)**,  thus  providing  a  major  price/performance  advantage  over the second-generation  machines,  which  were  built  up  from  individual  transistors. It
+The IBM 360 was the first major computer line to use (small-scale) **ICs (Integrated  Circuits)**,  thus  providing  a  major  price/performance  advantage  over the second-generation  machines,  which  were  built  up  from  individual  transistors. It was an immediate success, and the idea of a family of compatible computers was soon  adopted  by  all  the  other  major  manufacturers.  The  descendants  of  these  machines are still in use at computer centers today. Now adays they are often used for managing  huge  databases  (e.g.,  for  airline  reservation  systems)  or  as  servers  for World Wide Web sites that must process thousands of requests per second.
+
+The greatest strength of the ‘‘single-family’’ idea was simultaneously its greatest weakness. The original intention was that all software, including the operating system, **OS/360**, had to work on all models. It had to run on small systems, which often  just  replaced  1401s  for  copying  cards  to  tape,  and  on  very  large  systems, which often replaced 7094s for doing weather forecasting and other heavy computing.  It had to be good on systems with few peripherals and on systems with many peripherals.  It had to work in commercial environments and in scientific environments.  Above all, it had to be efficient for all of these different uses.
+
+There  was  no  way  that  IBM  (or  anybody  else  for  that  matter)  could  write  a
+piece  of  software  to  meet  all  those  conflicting  requirements.  The  result  was  an
+enormous  and  extraordinarily  complex operating  system,  probably  two to three
+orders of magnitude larger than FMS. It consisted of millions of lines of assembly
+language  written  by  thousands  of  programmers,  and  contained  thousands  upon
+thousands  of  bugs,  which  necessitated  a  continuous  stream  of  new releases  in  an
+attempt  to  correct  them.  Each  new release  fixed  some  bugs  and  introduced  new
+ones, so the number of bugs probably remained constant over time.
+
+One of the designers of OS/360, Fred Brooks, subsequently wrote a witty and
+incisive  book  (Brooks,  1995)  describing  his  experiences  with  OS/360. While  it
+would  be  impossible  to  summarize  the  book  here,  suffice  it  to  say  that  the  cover
+shows a herd of prehistoric beasts stuck in a tar pit. The cover of Silberschatz et al.
+(2012) makes a similar point about operating systems being dinosaurs.
+
+Despite its enormous size and problems, OS/360 and the similar third-genera-
+tion  operating  systems  produced  by  other  computer  manufacturers  actually  satisfied  most  of  their  customers  reasonably  well.  They also  popularized  several  key
+techniques  absent  in  second-generation  operating  systems.  Probably  the  most  im-
+portant  of  these  was **multiprogramming**. On the  7094,  when  the  current  job
+paused  to  wait  for  a  tape  or  other  I/O  operation  to  complete,  the  CPU  simply  sat
+idle  until  the  I/O  finished.  With  heavily  CPU-bound  scientific  calculations,  I/O  is
+infrequent, so this wasted time is not significant. With commercial data processing,
+the I/O wait time can often be 80 or 90% of the total time, so something had to be
+done to avoid having the (expensive) CPU be idle so much.
+
+The  solution  that  evolved  was  to  partition  memory  into  several  pieces,  with  a
+different job in each partition, as shown in Fig. 1-5.  While one job was waiting for
+I/O to complete, another job could be using the CPU. If enough jobs could be held
+in  main  memory  at  once,  the  CPU  could  be  kept  busy  nearly  100%  of  the  time.
+Having multiple jobs safely in memory at once requires special hardware to protect
+each  job  against  snooping  and  mischief  by  the  other  ones,  but  the  360  and  other
+third-generation systems were equipped with this hardware.
+
+<p align="center"><img src="img/fig1.5.png" width=35%></p>
+
+
+Another  major  feature  present  in  third-generation  operating  systems  was  the
+ability  to  read  jobs  from  cards  onto  the  disk  as  soon  as  they were  brought  to  the
+computer room. Then, whenever a running job finished, the operating system could
+load a new job from the disk into the now-empty partition and run it. This techni-
+que  is  called **spooling** (from **Simultaneous  Peripheral  Operation  On  Line**) and 
+was also  used  for  output.  With  spooling,  the  1401s  were  no  longer  needed,  and
+much carrying of tapes disappeared.
+
+Although third-generation operating systems were well suited for big scientific
+calculations and massive commercial data-processing runs, they were still basically
+batch  systems.  Many programmers  pined  for  the  first-generation  days  when  they
+had the machine all to themselves for a few hours, so they could debug their programs  quickly. With  third-generation  systems,  the  time  between  submitting  a  job
+and getting back the output was often several hours, so a single misplaced comma
+could  cause  a  compilation  to  fail,  and  the  programmer  to  waste  half  a  day. Pro-
+grammers did not like that very much.
+
+This  desire  for  quick  response  time  paved the  way  for **timesharing**, a variant
+of multiprogramming, in which each user has an online terminal. In a timesharing
+system, if 20 users are logged in and 17 of them are thinking or talking or drinking
+coffee, the CPU can be allocated in turn to the three jobs that want service. Since
+people  debugging  programs  usually  issue  short  commands  (e.g.,  compile  a  five page  procedure†)  rather  than  long  ones  (e.g.,  sort  a  million-record  file),  the  com-
+puter  can  provide  fast,  interactive  service  to  a  number  of  users  and  perhaps  also
+work  on  big  batch  jobs  in  the  background  when  the  CPU  is  otherwise  idle.  The
+first general-purpose timesharing system, **CTSS** (**Compatible Time Sharing System**), was developed at M.I.T. on a specially modified 7094 (Corbato ́ et al., 1962).
+However,  timesharing did not really become popular until the necessary protection
+hardware became widespread during the third generation.
+
+After the success of the CTSS system, M.I.T., Bell Labs, and General Electric
+(at  that  time  a  major  computer  manufacturer)  decided  to  embark  on  the  develop-
+ment of a ‘‘computer utility,’’ that is, a machine that would support some hundreds of simultaneous timesharing users. Their model was the electricity system—when
+you  need  electric  power, you  just  stick  a  plug  in  the  wall,  and  within  reason,  as
+much  power  as  you  need  will  be  there.  The  designers  of  this  system,  known  as
+**MULTICS** (**MULTiplexed  Information  and  Computing  Service**),  envisioned
+one  huge  machine  providing  computing  power  for  everyone  in  the  Boston  area.
+The idea that machines 10,000 times faster than their GE-645 mainframe would be
+sold  (for  well  under  $1000)  by  the  millions  only  40  years  later  was  pure  science
+fiction. Sort of like the idea of supersonic trans-Atlantic undersea trains now.
+
+MULTICS was a mixed success. It was designed to support hundreds of users
+on a machine only slightly more powerful than an Intel 386-based PC, although it
+had much more I/O capacity. This is not quite as crazy as it sounds, since in those
+days  people  knew how  to write  small,  efficient  programs,  a  skill  that  has  subsequently  been  completely  lost.  There  were  many reasons  that  MULTICS  did  not
+take over the  world,  not  the  least  of  which  is  that  it  was  written  in  the  PL/I  pro-
+gramming language, and the PL/I compiler was years late and barely worked at all
+when  it  finally  arrived. In addition,  MULTICS  was  enormously  ambitious  for  its
+time, much like Charles Babbage’s analytical engine in the nineteenth century.
+
+To  make a long story short, MULTICS introduced many seminal ideas into the
+computer  literature,  but  turning  it  into  a  serious  product  and  a  major  commercial
+success  was  a  lot  harder  than  anyone  had  expected.  Bell  Labs  dropped  out  of  the
+project,  and  General  Electric  quit  the  computer  business  altogether. Howev er,
+M.I.T. persisted and eventually got MULTICS working.  It was ultimately sold as a
+commercial product by the company (Honeywell) that bought GE’s computer busi-
+ness  and  was  installed  by  about  80  major  companies  and  universities  worldwide.
+While  their  numbers  were  small,  MULTICS  users  were  fiercely  loyal. General
+Motors, Ford, and the U.S. National Security Agency,  for example, shut down their
+MULTICS systems only in the late 1990s, 30 years after MULTICS was released,
+after years of trying to get Honeywell to update the hardware.
+
+By  the  end  of  the  20th  century, the  concept  of  a  computer  utility  had  fizzled
+out,  but  it  may  well  come  back  in  the  form  of cloud  computing, in which  relatively  small  computers  (including  smartphones,  tablets,  and  the  like)  are  con-
+nected to servers in vast and distant data centers where all the computing is done,
+with  the  local  computer  just  handling  the  user  interface. The motivation  here  is
+that most people do not want to administrate an increasingly complex and finicky
+computer system and would prefer to have that work done by a team of profession-
+als, for example, people working for the company running the data center. E-commerce is already evolving in this direction, with various companies running emails
+on  multiprocessor  servers  to  which  simple  client  machines  connect,  very  much  in
+the spirit of the MULTICS design.
+
+Despite  its  lack  of  commercial  success,  MULTICS  had  a  huge  influence  on
+subsequent  operating  systems  (especially  UNIX  and  its  derivatives,  FreeBSD,
+Linux, iOS, and Android). It is described in several papers and a book (Corbato ́ et 
+al., 1972; Corbato ́ and Vyssotsky,  1965; Daley and Dennis, 1968; Organick, 1972;
+
+
+##### †We will use the terms ‘‘procedure,’’  ‘‘subroutine,’’  and ‘‘function’’ interchangeably in this book.
+
+and  Saltzer, 1974). It also  has  an  active  Website,  located  at www.multicians.org,
+with much information about the system, its designers, and its users.
+
+Another  major  development  during  the  third  generation  was  the  phenomenal
+growth of minicomputers, starting with the DEC PDP-1 in 1961. The PDP-1 had
+only 4K of 18-bit words, but at $120,000 per machine (less than 5% of the price of
+a 7094),  it  sold  like hotcakes.  For  certain  kinds  of  nonnumerical  work,  it  was  al-
+most as fast as the 7094 and gav e birth to a whole new industry. It was quickly followed by a series of other PDPs (unlike IBM’s family, all incompatible) culminat-
+ing in the PDP-11.
+
+One of the computer scientists at Bell Labs who had worked on the MULTICS
+project, Ken Thompson, subsequently found a small PDP-7 minicomputer that no
+one was using and set out to write a stripped-down, one-user version of MULTICS.
+This work later developed into the **UNIX** operating system, which became popular
+in the academic world, with government agencies, and with many companies.
+
+The history of UNIX has been told elsewhere (e.g., Salus, 1994). Part of that
+story will be given in Chap. 10. For now, suffice it to say that because the source
+code was widely available, various organizations developed their own (incompatible) versions, which led to chaos. Two major versions developed, System V, from
+AT&T, and **BSD** (**Berkeley  Software Distribution**) from  the  University  of  California at Berkeley.  These had minor variants as well. To  make it possible to write
+programs  that  could  run  on  any UNIX  system,  IEEE  developed  a  standard  for
+UNIX, called **POSIX**, that most versions of UNIX now support.  POSIX defines a
+minimal  system-call  interface  that  conformant  UNIX  systems  must  support. In
+fact, some other operating systems now also support the POSIX interface.
+
+As  an  aside,  it  is  worth  mentioning  that  in  1987,  the  author  released  a  small
+clone  of  UNIX,  called **MINIX**, for  educational  purposes.  Functionally, MINIX  is
+very similar to UNIX, including POSIX support. Since that time, the original version has evolved into MINIX 3, which is highly modular and focused on very high
+reliability. It has  the  ability  to  detect  and  replace  faulty  or  even crashed  modules
+(such as I/O device drivers) on the fly without a reboot and without disturbing running programs. Its focus is on providing very high dependability and availability.
+A book describing its internal operation and listing the source code in an appendix
+is also available (Tanenbaum and Woodhull, 2006). The MINIX 3 system is available for free (including all the source code) over the Internet at www.minix3.org.
+
+The desire for a free production (as opposed to educational) version of MINIX
+led  a  Finnish  student,  Linus  Torvalds,  to  write **Linux**. This  system  was  directly
+inspired by and developed on MINIX and originally supported various MINIX features  (e.g.,  the  MINIX  file  system). It  has  since  been  extended  in  many ways  by
+many people but still retains some underlying structure common to MINIX and to
+UNIX. Readers interested  in  a  detailed  history  of  Linux  and  the  open  source
+movement  might  want  to  read  Glyn  Moody’s (2001)  book.  Most  of  what  will  be
+said about UNIX in this book thus applies to System V, MINIX, Linux, and other
+versions and clones of UNIX as well.
+
+## 1.2.4 The Fourth Generation (1980-Present): Personal Computers
+
+With the development of **LSI** (**Large Scale Integration**) circuits—chips containing  thousands  of  transistors  on  a  square  centimeter  of  silicon—the  age  of  the
+personal computer dawned.  In terms of architecture, personal computers (initially
+called microcomputers) were  not  all  that  different  from  minicomputers  of  the
+PDP-11  class,  but  in  terms  of  price  they certainly  were  different.  Where  the
+minicomputer made it possible for a department in a company or university to have
+its own computer, the microprocessor chip made it possible for a single individual
+to have his or her own personal computer.
+
+In  1974,  when  Intel  came  out  with  the  8080,  the  first  general-purpose  8-bit
+CPU, it wanted an operating system for the 8080, in part to be able to test it. Intel
+asked  one  of  its  consultants,  Gary  Kildall,  to  write  one. Kildall  and  a  friend  first
+built a controller for the newly released Shugart Associates 8-inch floppy disk and
+hooked the floppy disk up to the 8080, thus producing the first microcomputer with
+a disk.  Kildall  then  wrote  a  disk-based  operating  system  called **CP/M** (**Control
+Program  for  Microcomputers**) for  it.  Since  Intel  did  not  think  that  disk-based
+microcomputers had much of a future, when Kildall asked for the rights to CP/M,
+Intel granted his request. Kildall then formed a company,  Digital Research, to further develop and sell CP/M.
+
+In 1977, Digital Research rewrote CP/M to make it suitable for running on the
+many microcomputers using the 8080, Zilog Z80, and other CPU chips. Many application  programs  were  written  to  run  on  CP/M,  allowing  it  to  completely  domi-
+nate the world of microcomputing for about 5 years.
+
+In the early 1980s, IBM designed the IBM PC and looked around for software
+to  run  on  it.  People  from  IBM  contacted  Bill  Gates  to  license  his  BASIC  interpreter. They also  asked  him  if  he  knew of an operating  system  to  run  on  the  PC.
+Gates suggested that IBM contact Digital Research, then the world’s dominant operating  systems  company.  Making  what  was  surely  the  worst  business  decision  in
+recorded history, Kildall refused to meet with IBM, sending a subordinate instead.
+To  make matters even worse, his lawyer even refused to sign IBM’s nondisclosure
+agreement  covering  the  not-yet-announced  PC. Consequently, IBM  went  back  to
+Gates asking if he could provide them with an operating system.
+
+When  IBM  came  back,  Gates  realized  that  a  local  computer  manufacturer,
+Seattle  Computer  Products,  had  a  suitable  operating  system, **DOS** (**Disk  Operat-
+ing  System**). He approached  them  and  asked  to  buy  it  (allegedly  for  $75,000),
+which  they readily  accepted.  Gates  then  offered  IBM  a  DOS/BASIC  package,
+which  IBM  accepted. IBM  wanted  certain  modifications,  so  Gates  hired  the  per-
+son who wrote DOS, Tim Paterson, as an employee of Gates’ fledgling company,
+Microsoft,  to  make them.  The  revised  system  was  renamed **MS-DOS** (**MicroSoft
+Disk  Operating  System**) and  quickly  came  to  dominate  the  IBM  PC  market. A
+key factor here was Gates’ (in retrospect, extremely wise) decision to sell MS-DOS
+to  computer  companies  for  bundling  with  their  hardware,  compared  to  Kildall’s
 
 
 
