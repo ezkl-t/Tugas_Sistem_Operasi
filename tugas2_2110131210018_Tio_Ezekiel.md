@@ -350,7 +350,7 @@ son who wrote DOS, Tim Paterson, as an employee of Gates’ fledgling company,
 Microsoft,  to  make them.  The  revised  system  was  renamed **MS-DOS** (**MicroSoft
 Disk  Operating  System**) and  quickly  came  to  dominate  the  IBM  PC  market. A
 key factor here was Gates’ (in retrospect, extremely wise) decision to sell MS-DOS
-to  computer  companies  for  bundling  with  their  hardware,  compared  to  Kildall’s
+to  computer  companies  for  bundling  with  their  hardware,  compared  to  
 
 
 
