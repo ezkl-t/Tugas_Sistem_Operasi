@@ -777,3 +777,181 @@ grammed at the factory and cannot be changed afterward. It is fast and inexpensi
 them takes orders of magnitude more time than writing RAM, so they are used in
 the same way ROM is, only with the additional feature that it is now possible to
 correct bugs in programs they hold by rewriting them in the field.
+
+Flash memory is also commonly used as the storage medium in portable elec-
+tronic devices.  It serves as film in digital cameras and as the disk in portable music
+players,  to  name  just  two uses.  Flash  memory  is  intermediate  in  speed  between
+RAM and disk. Also, unlike disk memory, if it is erased too many times, it wears
+out.
+
+Yet another kind of memory is CMOS, which is volatile. Many computers use
+CMOS  memory  to  hold  the  current  time  and  date. The  CMOS  memory  and  the
+clock  circuit  that  increments  the  time  in  it  are  powered  by  a  small  battery, so the
+time is correctly updated, even when the computer is unplugged. The CMOS mem-
+ory  can  also  hold  the  configuration  parameters,  such  as  which  disk  to  boot  from.
+CMOS  is  used  because  it  draws  so  little  power  that  the  original  factory-installed
+battery often lasts for several years. However,  when it begins to fail, the computer
+can  appear  to  have  Alzheimer’s disease,  forgetting  things  that  it  has  known  for
+years, like which hard disk to boot from.
+
+## 1.3.3 Disks
+
+Next in the hierarchy is magnetic disk (hard disk). Disk storage is two orders
+of magnitude cheaper than RAM per bit and often two orders of magnitude larger
+as well. The only problem is that the time to randomly access data on it is close to
+three orders of magnitude slower. The reason is that a disk is a mechanical device,
+as shown in Fig. 1-10.
+
+<p align="center"><img src="img/fig1.10.png" width=35%></p>
+
+A disk consists of one or more metal platters that rotate at 5400, 7200, 10,800
+RPM or more. A mechanical arm pivots over the platters from the corner, similar
+to  the  pickup  arm  on  an  old  33-RPM  phonograph  for  playing  vinyl  records. Information is written onto the disk in a series of concentric circles. At any giv en
+arm position, each of the heads can read an annular region called a **track**. Together, all the tracks for a given arm position form a **cylinder**.
+
+Each track is divided into some number of sectors, typically 512 bytes per sector. On modern disks, the outer cylinders contain more sectors than the inner ones.
+Moving the arm from one cylinder to the next takes about 1 msec. Moving it to a
+random cylinder typically takes 5 to 10 msec, depending on the drive. Once the
+arm is on the correct track, the drive must wait for the needed sector to rotate under
+the head, an additional delay of 5 msec to 10 msec, depending on the drive’s RPM.
+Once the sector is under the head, reading or writing occurs at a rate of 50 MB/sec
+on low-end disks to 160 MB/sec on faster ones.
+
+Sometimes you will hear people talk about disks that are really not disks at all,
+like **SSDs** ,( **Solid State Disks** ). SSDs do not have moving parts, do not contain
+platters in the shape of disks, and store data in (Flash) memory. The only ways in
+which they resemble disks is that they also store a lot of data which is not lost
+when the power is off.
+
+Many computers support a scheme known as **virtual memory** , which we will
+discuss at some length in Chap. 3. This scheme makes it possible to run programs
+larger than physical memory by placing them on the disk and using main memory
+as a kind of cache for the most heavily executed parts. This scheme requires remapping memory addresses on the fly to convert the address the program generated to the physical address in RAM where the word is located. This mapping is
+done by a part of the CPU called the **MMU** ( **Memory Management Unit** ), as
+shown in Fig. 1-6.
+
+The presence of caching and the MMU can have a major impact on performance. In a multiprogramming system, when switching from one program to
+another, sometimes called a **context switch** , it may be necessary to flush all modified blocks from the cache and change the mapping registers in the MMU. Both of
+these are expensive operations, and programmers try hard to avoid them. We will
+see some of the implications of their tactics later.
+
+## 1.3.4 I/O Devices
+
+The  CPU  and  memory  are  not  the  only  resources  that  the  operating  system
+must manage. I/O devices also interact heavily with the operating system. As we
+saw in Fig. 1-6, I/O devices generally consist of two parts: a controller and the de-
+vice itself. The controller is a chip or a set of chips that physically controls the de-
+vice. It accepts  commands  from  the  operating  system,  for  example,  to  read  data
+from the device, and carries them out.
+
+In many cases, the actual control of the device is complicated and detailed, so
+it is the job of the controller to present a simpler (but still very complex) interface
+to the operating system. For example, a disk controller might accept a command to read sector 11,206 from disk 2. The controller then has to convert this linear sector
+number to a cylinder, sector, and head. This conversion may be complicated by the
+fact that outer cylinders have more sectors than inner ones and that some bad sectors have been remapped onto other ones. Then the controller has to determine
+which cylinder the disk arm is on and give it a command to move in or out the requisite number of cylinders. It has to wait until the proper sector has rotated under
+the head and then start reading and storing the bits as they come off the drive,
+removing the preamble and computing the checksum. Finally, it has to assemble
+the incoming bits into words and store them in memory. To do all this work, controllers often contain small embedded computers that are programmed to do their
+work.
+
+The other piece is the actual device itself. Devices have fairly simple interfaces, both because they cannot do much and to make them standard. The latter is
+needed so that any SAT A disk controller can handle any SAT A disk, for example.
+**SATA** stands for **Serial ATA** and **AT A** in turn stands for **AT Attachment**. In case
+you are curious what AT stands for, this was IBM’s second generation ‘‘Personal
+Computer Advanced Technology’’ built around the then-extremely-potent 6-MHz
+80286 processor that the company introduced in 1984. What we learn from this is
+that the computer industry has a habit of continuously enhancing existing acro-
+nyms with new prefixes and suffixes. We also learned that an adjective like ‘‘advanced’’ should be used with great care, or you will look silly thirty years down the
+line.
+
+SATA is currently the standard type of disk on many computers. Since the ac-
+tual device interface is hidden behind the controller, all that the operating system
+sees is the interface to the controller, which may be quite different from the inter-
+face to the device.
+
+Because each type of controller is different, different software is needed to
+control each one. The software that talks to a controller, giving it commands and
+accepting responses, is called a **device driver**. Each controller manufacturer has to
+supply a driver for each operating system it supports. Thus a scanner may come
+with drivers for OS X, Windows 7, Windows 8, and Linux, for example.
+
+To be used, the driver has to be put into the operating system so it can run in
+kernel mode. Drivers can actually run outside the kernel, and operating systems
+like Linux and Windows nowadays do offer some support for doing so. The vast
+majority of the drivers still run below the kernel boundary. Only very few current
+systems, such as MINIX 3, run all drivers in user space. Drivers in user space must
+be allowed to access the device in a controlled way, which is not straightforward.
+
+There are three ways the driver can be put into the kernel. The first way is to
+relink the kernel with the new driver and then reboot the system. Many older UNIX
+systems work like this. The second way is to make an entry in an operating system
+file telling it that it needs the driver and then reboot the system. At boot time, the
+operating system goes and finds the drivers it needs and loads them. Windows
+works this way. The third way is for the operating system to be able to accept new drivers while running and install them on the fly without the need to reboot. This
+way used to be rare but is becoming much more common now. Hot-pluggable
+devices, such as USB and IEEE 1394 devices (discussed below), always need dynamically loaded drivers.
+
+Every controller has a small number of registers that are used to communicate
+with it. For example, a minimal disk controller might have registers for specifying
+the disk address, memory address, sector count, and direction (read or write). To
+activate the controller, the driver gets a command from the operating system, then
+translates it into the appropriate values to write into the device registers. The collection of all the device registers forms the **I/O port space** , a subject we will come
+back to in Chap. 5.
+
+On some computers, the device registers are mapped into the operating system’s address space (the addresses it can use), so they can be read and written like
+ordinary memory words. On such computers, no special I/O instructions are required and user programs can be kept away from the hardware by not putting these
+memory addresses within their reach (e.g., by using base and limit registers). On
+other computers, the device registers are put in a special I/O port space, with each
+register having a port address. On these machines, specialINandOUTinstructions
+are available in kernel mode to allow drivers to read and write the registers. The
+former scheme eliminates the need for special I/O instructions but uses up some of
+the address space. The latter uses no address space but requires special instruc-
+tions. Both systems are widely used.
+
+Input and output can be done in three different ways. In the simplest method, a
+user program issues a system call, which the kernel then translates into a procedure
+call to the appropriate driver. The driver then starts the I/O and sits in a tight loop
+continuously polling the device to see if it is done (usually there is some bit that indicates that the device is still busy). When the I/O has completed, the driver puts
+the data (if any) where they are needed and returns. The operating system then returns control to the caller. This method is called **busy waiting** and has the disad-
+vantage of tying up the CPU polling the device until it is finished.
+
+The second method is for the driver to start the device and ask it to give an interrupt when it is finished. At that point the driver returns. The operating system
+then blocks the caller if need be and looks for other work to do. When the controller detects the end of the transfer, it generates an **interrupt** to signal comple-
+tion.
+
+Interrupts are very important in operating systems, so let us examine the idea
+more closely. In Fig. 1-11(a) we see a three-step process for I/O. In step 1, the
+driver tells the controller what to do by writing into its device registers. The controller then starts the device. When the controller has finished reading or writing
+the number of bytes it has been told to transfer, it signals the interrupt controller
+chip using certain bus lines in step 2. If the interrupt controller is ready to accept
+the interrupt (which it may not be if it is busy handling a higher-priority one), it asserts a pin on the CPU chip telling it, in step 3. In step 4, the interrupt controller puts the number of the device on the bus so the CPU can read it and know which
+device has just finished (many devices may be running at the same time).
+
+<p align="center"><img src="img/fig1.11.png" width=35%></p>
+
+Once the CPU has decided to take the interrupt, the program counter and PSW
+are typically then pushed onto the current stack and the CPU switched into kernel
+mode. The device number may be used as an index into part of memory to find the
+address of the interrupt handler for this device. This part of memory is called the
+**interrupt vector**. Once the interrupt handler (part of the driver for the interrupting
+device) has started, it removes the stacked program counter and PSW and saves
+them, then queries the device to learn its status. When the handler is all finished, it
+returns to the previously running user program to the first instruction that was not
+yet executed. These steps are shown in Fig. 1-11(b).
+
+The third method for doing I/O makes use of special hardware: a **DMA**
+( **Direct Memory Access** ) chip that can control the flow of bits between memory
+and some controller without constant CPU intervention. The CPU sets up the
+DMA chip, telling it how many bytes to transfer, the device and memory addresses
+involved, and the direction, and lets it go. When the DMA chip is done, it causes
+an interrupt, which is handled as described above. DMA and I/O hardware in general will be discussed in more detail in Chap. 5.
+
+Interrupts can (and often do) happen at highly inconvenient moments, for example, while another interrupt handler is running. For this reason, the CPU has a
+way to disable interrupts and then reenable them later. While interrupts are disabled, any devices that finish continue to assert their interrupt signals, but the CPU
+is not interrupted until interrupts are enabled again. If multiple devices finish
+while interrupts are disabled, the interrupt controller decides which one to let
+through first, usually based on static priorities assigned to each device. The
+highest-priority device wins and gets to be serviced first. The others must wait.
+
+## 1.3.5 Buses
