@@ -1847,7 +1847,9 @@ file, subsequent changes made to one copy do not affect the others.
 To  see  how link works,  consider  the  situation  of  Fig. 1-21(a). Here are  two
 users, ast and jim, each  having  his  own  directory  with  some  files. If ast now executes a program containing the system call
 
+```
 link("/usr/jim/memo", "/usr/ast/note");
+```
 
 the file memo in jim’s  directory is now entered into ast’s  directory under the name
 note. Thereafter, /usr/jim/memo and /usr/ast/note refer  to  the  same  file. As an
@@ -1877,9 +1879,9 @@ the user can then insert a USB disk with files to be read.
 
 By executing the mount system call, the USB file system can be attached to the
 root file system, as shown in Fig. 1-22. A typical statement in C to mount is
-
+```
 mount("/dev/sdb0", "/mnt", 0);
-
+```
 where  the  first  parameter  is  the  name  of  a  block  special  file  for  USB  drive  0, the
 second  parameter  is  the  place  in  the  tree  where  it  is  to  be  mounted,  and  the  third
 parameter tells whether the file system is to be mounted read-write or read-only.
@@ -1899,17 +1901,17 @@ unmounted with the umount system call.
 ## 1.6.4 Miscellaneous System Calls
 A variety of other system calls exist as well. We  will look at just four of them
 here.  The chdir call changes the current working directory. After the call
-
+```
 chdir("/usr/ast/test");
-
+```
 an open on the file xyz will open /usr/ast/test/xyz. The concept of a working directory eliminates the need for typing (long) absolute path names all the time.
 
 In  UNIX  every  file  has  a  mode  used  for  protection.  The  mode  includes  the
 read-write-execute  bits  for  the  owner, group,  and  others. The chmod system  call
 makes  it  possible  to  change  the  mode  of  a  file.  For  example,  to  make a file  readonly by everyone except the owner, one could execute
-
+```
 chmod("file", 0644);
-
+```
 The kill system call is the way users and user processes send signals. If a process is prepared to catch a particular signal, then when it arrives, a signal handler is run.  If the process is not prepared to handle a signal, then its arrival kills the process (hence the name of the call).
 
 POSIX  defines  a  number  of  procedures  for  dealing  with  time.  For  example,
@@ -1998,5 +2000,779 @@ some idea of the spectrum of possibilities. These are by no means exhaustive, bu
 they giv e an idea of some designs that have been tried in practice. The six designs
 we  will  discuss  here  are  monolithic  systems,  layered  systems,  microkernels,  client-server systems, virtual machines, and exokernels.
 
+## 1.7.1 Monolithic Systems
+
+By far the most common organization, in the monolithic approach the entire
+operating system runs as a single program in kernel mode. The operating system is
+written as a collection of procedures, linked together into a single large executable
+binary program. When this technique is used, each procedure in the system is free
+to call any other one, if the latter provides some useful computation that the former
+needs. Being able to call any procedure you want is very efficient, but having thousands of procedures that can call each other without restriction may also lead to a
+system that is unwieldy and difficult to understand. Also, a crash in any of these
+procedures will take down the entire operating system.
+
+To construct the actual object program of the operating system when this approach is used, one first compiles all the individual procedures (or the files con-
+taining the procedures) and then binds them all together into a single executable
+file using the system linker. In terms of information hiding, there is essentially
+none—every procedure is visible to every other procedure (as opposed to a structure containing modules or packages, in which much of the information is hidden
+aw ay inside modules, and only the officially designated entry points can be called
+from outside the module).
+
+Even in monolithic systems, however, it is possible to have some structure. The
+services (system calls) provided by the operating system are requested by putting
+the parameters in a well-defined place (e.g., on the stack) and then executing a trap
+instruction. This instruction switches the machine from user mode to kernel mode
+and transfers control to the operating system, shown as step 6 in Fig. 1-17. The
+operating system then fetches the parameters and determines which system call is
+to be carried out. After that, it indexes into a table that contains in slot k a pointer
+to the procedure that carries out system call k (step 7 in Fig. 1-17).
+
+This organization suggests a basic structure for the operating system:
+
+1. A main program that invokes the requested service procedure.
+2. A set of service procedures that carry out the system calls.
+3. A set of utility procedures that help the service procedures.
+
+In this model, for each system call there is one service procedure that takes care of
+it and executes it. The utility procedures do things that are needed by several service procedures, such as fetching data from user programs. This division of the
+procedures into three layers is shown in Fig. 1-24.
+
+In addition to the core operating system that is loaded when the computer is
+booted, many operating systems support loadable extensions, such as I/O device
+drivers and file systems. These components are loaded on demand. In UNIX they
+are called shared libraries. In Windows they are called DLLs ( Dynamic-Link
+Libraries ). They hav e file extension .dll and the C:\Windows\system32 directory
+on Windows systems has well over 1000 of them.
+
+<p align="center"><img src="img/fig1.24.png" width=35%></p>
+
+## 1.7.2 Layered Systems
+
+A generalization of the approach of Fig. 1-24 is to organize the operating sys-
+tem as a hierarchy of layers, each one constructed upon the one below it. The first
+system constructed in this way was the THE system built at the Technische Hoge-
+school  Eindhoven in the  Netherlands  by  E.  W. Dijkstra  (1968)  and  his  students.
+The THE system was a simple batch system for a Dutch computer, the Electrolog-
+ica X8, which had 32K of 27-bit words (bits were expensive back then).
+
+The system had six layers, as shown in Fig. 1-25.  Layer 0 dealt with allocation
+of  the  processor, switching  between  processes  when  interrupts  occurred  or  timers
+expired.  Above layer  0,  the  system  consisted  of  sequential  processes,  each  of
+which  could  be  programmed  without  having  to  worry  about  the  fact  that  multiple
+processes were running on a single processor. In other words, layer 0 provided the
+basic multiprogramming of the CPU.
+
+<p align="center"><img src="img/fig1.25.png" width=35%></p>
+
+Layer 1 did the memory management. It allocated space for processes in main
+memory and on a 512K word drum used for holding parts of processes (pages) for
+which there was no room in main memory. Above layer 1, processes did not have
+to worry about whether they were in memory or on the drum; the layer 1 software took  care  of  making  sure  pages  were  brought  into  memory  at  the  moment  they
+were needed and removed when they were not needed.
+
+Layer  2  handled  communication  between  each  process  and  the  operator  console (that is, the user). On top of this layer each process effectively had its own operator  console. Layer  3  took  care  of  managing  the  I/O  devices  and  buffering  the
+information streams to and from them. Above layer 3 each process could deal with
+abstract  I/O  devices  with  nice  properties,  instead  of  real  devices  with  many peculiarities.  Layer  4  was  where  the  user  programs  were  found. They did  not  have  to
+worry  about  process,  memory, console,  or  I/O  management.  The  system  operator
+process was located in layer 5.
+
+A further generalization of the layering concept was present in the MULTICS
+system. Instead of layers, MULTICS was described as having a series of concentric
+rings,  with  the  inner  ones  being  more  privileged  than  the  outer  ones  (which  is  ef-
+fectively the same thing). When a procedure in an outer ring wanted to call a pro-
+cedure  in  an  inner  ring,  it  had  to  make the  equivalent  of  a  system  call,  that  is,  a
+TRAP instruction whose parameters were carefully checked for validity before the
+call was allowed to proceed. Although the entire operating system was part of the
+address space of each user process in MULTICS, the hardware made it possible to
+designate  individual  procedures  (memory  segments,  actually)  as  protected  against
+reading, writing, or executing.
+
+Whereas the THE layering scheme was really only a design aid, because all the
+parts  of  the  system  were  ultimately  linked  together  into  a  single  executable  program,  in  MULTICS,  the  ring  mechanism  was  very  much  present  at  run  time  and
+enforced by the hardware. The advantage of the ring mechanism is that it can easily be extended to structure user subsystems. For example, a professor could write a
+program  to  test  and  grade  student  programs  and  run  this  program  in  ring n, with
+the  student  programs  running  in  ring n + 1 so that  they could  not  change  their
+grades.
+
+## 1.7.3  Microkernels
+
+With the layered approach, the designers have a choice where to draw the kernel-user  boundary. Traditionally, all  the  layers  went  in  the  kernel,  but  that  is  not
+necessary. In fact, a strong case can be made for putting as little as possible in kernel mode because bugs in the kernel can bring down the system instantly. In contrast, user processes can be set up to have less power so that a bug there may not be
+fatal.
+
+Various researchers have repeatedly studied the number of bugs per 1000 lines
+of code (e.g., Basilli and Perricone, 1984; and Ostrand and Weyuker, 2002).  Bug
+density  depends  on  module  size,  module  age,  and  more,  but  a  ballpark  figure  for
+serious industrial systems is between two and ten bugs per thousand lines of code.
+This means that a monolithic operating system of fiv e million lines of code is likely to contain between 10,000 and 50,000 kernel bugs. Not all of these are fatal, of course, since some bugs may be things like issuing an incorrect error message in a
+situation that rarely occurs. Nevertheless, operating systems are sufficiently buggy
+that  computer  manufacturers  put  reset  buttons  on  them  (often  on  the  front  panel),
+something  the  manufacturers  of  TV  sets,  stereos,  and  cars  do  not  do,  despite  the
+large amount of software in these devices.
+
+The  basic  idea  behind  the  microkernel  design  is  to  achieve  high  reliability  by
+splitting  the  operating  system  up  into  small,  well-defined  modules,  only  one  of
+which—the microkernel—runs in kernel mode and the rest run as relatively powerless  ordinary  user  processes. In  particular, by running  each  device  driver and  file
+system as a separate user process, a bug in one of these can crash that component,
+but cannot  crash  the  entire  system.  Thus  a  bug  in  the  audio  driver will  cause  the
+sound  to  be  garbled  or  stop,  but  will  not  crash  the  computer. In contrast,  in  a
+monolithic system with all the drivers in the kernel, a buggy audio driver can easily
+reference  an  invalid  memory  address  and  bring  the  system  to  a  grinding  halt  in-
+stantly.
+
+Many microkernels have been implemented and deployed for decades (Haertiget  al.,  1997;  Heiser  et  al.,  2006;  Herder  et  al.,  2006;  Hildebrand,  1992;  Kirsch  et
+al.,  2005;  Liedtke,  1993,  1995,  1996;  Pike et al.,  1992;  and  Zuberi  et  al.,  1999).
+With the exception of OS X, which is based on the Mach microkernel (Accetta et
+al., 1986), common desktop operating systems do not use microkernels.  However,
+they are  dominant  in  real-time,  industrial,  avionics,  and  military  applications  that
+are mission critical and have very high reliability requirements. A few  of the better-known  microkernels  include  Integrity, K42,  L4,  PikeOS,  QNX,  Symbian,  and
+MINIX 3. We  now giv e a brief overview of MINIX 3, which has taken the idea of
+modularity to the limit, breaking most of the operating system up into a number of
+independent user-mode processes. MINIX 3 is a POSIX-conformant, open source
+system  freely  available  at www.minix3.org (Giuffrida  et  al.,  2012;  Giuffrida  et  al.,
+2013; Herder et al., 2006; Herder et al., 2009; and Hruby et al., 2013).
+
+The MINIX 3 microkernel is only about 12,000 lines of C and some 1400 lines
+of assembler for very low-level functions such as catching interrupts and switching
+processes.  The  C  code  manages  and  schedules  processes,  handles  interprocess
+communication (by passing messages between processes), and offers a set of about
+40 kernel calls to allow the rest of the operating system to do its work. These calls
+perform  functions  like hooking  handlers  to  interrupts,  moving  data  between  ad-
+dress spaces, and installing memory maps for new processes. The process structure
+of MINIX 3 is shown in Fig. 1-26, with the kernel call handlers labeled Sys. The 
+device  driver for  the  clock  is  also  in  the  kernel  because  the  scheduler  interacts
+closely with it. The other device drivers run as separate user processes.
+
+Outside the kernel, the system is structured as three layers of processes all running in user mode. The lowest layer contains the device drivers.  Since they run in
+user mode, they do not have physical access to the I/O port space and cannot issue
+I/O commands directly. Instead, to program an I/O device, the driver builds a structure telling which values to write to which I/O ports and makes a kernel call telling 
+
+ <p align="center"><img src="img/fig1.4.png" width=35%></p>
+
+the  kernel  to  do  the  write.  This  approach  means  that  the  kernel  can  check  to  see
+that the driver is writing (or reading) from I/O it is authorized to use. Consequently
+(and unlike a  monolithic design), a buggy audio driver cannot accidentally write on
+the disk.
+
+Above the drivers is another user-mode layer containing the servers, which do
+most of the work of the operating system. One or more file servers manage the file
+system(s),  the  process  manager  creates,  destroys,  and  manages  processes,  and  so
+on. User programs obtain operating system services by sending short messages to
+the servers asking for the POSIX system calls. For example, a process needing to
+do a read sends a message to one of the file servers telling it what to read.
+
+One interesting server is the **reincarnation server**, whose job is to check if the
+other servers and drivers are functioning correctly. In the event that a faulty one is
+detected,  it  is  automatically  replaced  without  any user  intervention. In this  way,
+the system is self healing and can achieve high reliability.
+
+The system has many restrictions limiting the power of each process. As mentioned, drivers can touch only authorized I/O ports, but access to kernel calls is also
+controlled on a per-process basis, as is the ability to send messages to other processes.  Processes  can  also  grant  limited  permission  for  other  processes  to  have  the
+kernel access their address spaces. As an example, a file system can grant permission for the disk driver to let the kernel put a newly read-in disk block at a specific
+address  within  the  file  system’s address  space.  The  sum  total  of  all  these  restrictions is that each driver and server has exactly the power to do its work and nothing
+more, thus greatly limiting the damage a buggy component can do.
+
+An idea somewhat related to having a minimal kernel is to put the **mechanism**
+for  doing  something  in  the  kernel  but  not  the **policy**. To make this  point  better,
+consider  the  scheduling  of  processes. A relatively  simple  scheduling  algorithm  is
+to  assign  a  numerical  priority  to  every  process  and  then  have  the  kernel  run  the highest-priority  process  that  is  runnable.  The  mechanism—in  the  kernel—is  to
+look for the highest-priority process and run it. The policy—assigning priorities to
+processes—can be done by user-mode processes. In this way, policy and mechanism can be decoupled and the kernel can be made smaller.
+
+## 1.7.4 Client-Server Model
+
+A slight variation of the microkernel idea is to distinguish two classes of processes, the **servers** , each of which provides some service, and the **clients** , which use
+these services. This model is known as the **client-server** model. Often the lowest
+layer is a microkernel, but that is not required. The essence is the presence of client processes and server processes.
+
+Communication between clients and servers is often by message passing. To
+obtain a service, a client process constructs a message saying what it wants and
+sends it to the appropriate service. The service then does the work and sends back
+the answer. If the client and server happen to run on the same machine, certain
+optimizations are possible, but conceptually, we are still talking about message
+passing here.
+
+An obvious generalization of this idea is to have the clients and servers run on
+different computers, connected by a local or wide-area network, as depicted in
+Fig. 1-27. Since clients communicate with servers by sending messages, the clients need not know whether the messages are handled locally on their own machines, or whether they are sent across a network to servers on a remote machine.
+As far as the client is concerned, the same thing happens in both cases: requests are
+sent and replies come back. Thus the client-server model is an abstraction that can
+be used for a single machine or for a network of machines.
+
+<p align="center"><img src="img/fig1.27.png" width=35%></p>
+
+Increasingly many systems involve users at their home PCs as clients and large
+machines  elsewhere  running  as  servers. In fact,  much  of  the  Web  operates  this
+way. A PC sends a request for a Web page to the server and the Web page comes
+back. This is a typical use of the client-server model in a network.
+
+## 1.7.5 Virtual Machines
+
+The initial releases of OS/360 were strictly batch systems. Nevertheless, many
+360 users wanted to be able to work interactively at a terminal, so various groups,
+both inside and outside IBM, decided to write timesharing systems for it. The official IBM timesharing system, TSS/360, was delivered late, and when it finally ar-
+rived it was so big and slow that few sites converted to it. It was eventually abandoned after its development had consumed some $50 million (Graham, 1970). But
+a group at IBM’s Scientific Center in Cambridge, Massachusetts, produced a radically different system that IBM eventually accepted as a product. A linear descen-
+dant of it, called **z/VM** , is now widely used on IBM’s current mainframes, the
+zSeries, which are heavily used in large corporate data centers, for example, as
+e-commerce servers that handle hundreds or thousands of transactions per second
+and use databases whose sizes run to millions of gigabytes.
+
+**VM/370**
+
+This system, originally calledCP/CMSand later renamed VM/370 (Seawright
+and MacKinnon, 1979), was based on an astute observation: a timesharing system
+provides (1) multiprogramming and (2) an extended machine with a more convenient interface than the bare hardware. The essence of VM/370 is to completely
+separate these two functions.
+
+The heart of the system, known as the **virtual machine monitor** , runs on the
+bare hardware and does the multiprogramming, providing not one, but several virtual machines to the next layer up, as shown in Fig. 1-28. However, unlike all
+other operating systems, these virtual machines are not extended machines, with
+files and other nice features. Instead, they are _exact_ copies of the bare hardware, including kernel/user mode, I/O, interrupts, and everything else the real machine has.
+
+<p align="center"><img src="img/fig1.28.png" width=35%></p>
+
+Because each virtual machine is identical to the true hardware, each one can
+run any operating system that will run directly on the bare hardware. Different virtual machines can, and frequently do, run different operating systems. On the orig-
+inal IBM VM/370 system, some ran OS/360 or one of the other large batch or transaction-processing operating systems, while others ran a single-user, interactive
+system called **CMS** ( **Conversational Monitor System** ) for interactive timesharing
+users. The latter was popular with programmers.
+
+When a CMS program executed a system call, the call was trapped to the operating system in its own virtual machine, not to VM/370, just as it would be were it
+running on a real machine instead of a virtual one. CMS then issued the normal
+hardware I/O instructions for reading its virtual disk or whatever was needed to
+carry out the call. These I/O instructions were trapped by VM/370, which then performed them as part of its simulation of the real hardware. By completely separating the functions of multiprogramming and providing an extended machine, each
+of the pieces could be much simpler, more flexible, and much easier to maintain.
+
+In its modern incarnation, z/VM is usually used to run multiple complete operating systems rather than stripped-down single-user systems like CMS. For example, the zSeries is capable of running one or more Linux virtual machines along
+with traditional IBM operating systems.
+
+**Virtual Machines Rediscovered**
+
+While IBM has had a virtual-machine product available for four decades, and a
+few other companies, including Oracle and Hewlett-Packard, have recently added
+virtual-machine support to their high-end enterprise servers, the idea of virtualization has largely been ignored in the PC world until recently. But in the past
+few years, a combination of new needs, new software, and new technologies have
+combined to make it a hot topic.
+
+First the needs. Many companies have traditionally run their mail servers, Web
+servers, FTP servers, and other servers on separate computers, sometimes with different operating systems. They see virtualization as a way to run them all on the
+same machine without having a crash of one server bring down the rest.
+
+Virtualization is also popular in the Web hosting world. Without virtualization,
+Web hosting customers are forced to choose between **shared hosting** (which just
+gives them a login account on a Web server, but no control over the server software) and dedicated hosting (which gives them their own machine, which is very
+flexible but not cost effective for small to medium Websites). When a Web hosting
+company offers virtual machines for rent, a single physical machine can run many
+virtual machines, each of which appears to be a complete machine. Customers who
+rent a virtual machine can run whatever operating system and software they want
+to, but at a fraction of the cost of a dedicated server (because the same physical
+machine supports many virtual machines at the same time).
+Another use of virtualization is for end users who want to be able to run two or
+more operating systems at the same time, say Windows and Linux, because some
+of their favorite application packages run on one and some run on the other. This
+situation is illustrated in Fig. 1-29(a), where the term ‘‘virtual machine monitor’’
+has been renamed **type 1 hypervisor** , which is commonly used nowadays because ‘virtual  machine  monitor’’ requires  more  keystrokes  than  people  are  prepared  to
+put up with now.  Note that many authors use the terms interchangeably though.
+
+<p align="center"><img src="img/fig1.29.png" width=35%></p>
+
+While no one disputes the attractiveness of virtual machines today, the problem
+then was implementation. In order to run virtual machine software on a computer,
+its CPU must be virtualizable (Popek and Goldberg, 1974). In a nutshell, here is
+the problem. When an operating system running on a virtual machine (in user
+mode) executes a privileged instruction, such as modifying the PSW or doing I/O,
+it is essential that the hardware trap to the virtual-machine monitor so the instruction can be emulated in software. On some CPUs—notably the Pentium, its predecessors, and its clones—attempts to execute privileged instructions in user mode
+are just ignored. This property made it impossible to have virtual machines on this
+hardware, which explains the lack of interest in the x86 world. Of course, there
+were interpreters for the Pentium, such as _Bochs_ , that ran on the Pentium, but with
+a performance loss of one to two orders of magnitude, they were not useful for serious work.
+
+This situation changed as a result of several academic research projects in the
+1990s and early years of this millennium, notably Disco at Stanford (Bugnion et
+al., 1997) and Xen at Cambridge University (Barham et al., 2003). These research
+papers led to several commercial products (e.g., VMware Workstation and Xen)
+and a revival of interest in virtual machines. Besides VMware and Xen, popular
+hypervisors today include KVM (for the Linux kernel), VirtualBox (by Oracle),
+and Hyper-V (by Microsoft).
+
+Some of these early research projects improved the performance over interpreters like _Bochs_ by translating blocks of code on the fly, storing them in an internal cache, and then reusing them if they were executed again. This improved the
+performance considerably, and led to what we will call **machine simulators** ,as
+shown in Fig. 1-29(b). However, although this technique, known as **binary translation** , helped improve matters, the resulting systems, while good enough to publish papers about in academic conferences, were still not fast enough to use in
+commercial environments where performance matters a lot.
+
+The next step in improving performance was to add a kernel module to do
+some of the heavy lifting, as shown in Fig. 1-29(c). In practice now, all commercially available hypervisors, such as VMware Workstation, use this hybrid strategy
+(and have many other improvements as well). They are called **type 2 hypervisors**
+by everyone, so we will (somewhat grudgingly) go along and use this name in the
+rest of this book, even though we would prefer to called them type 1.7 hypervisors
+to reflect the fact that they are not entirely user-mode programs. In Chap. 7, we
+will describe in detail how VMware Workstation works and what the various
+pieces do.
+
+In practice, the real distinction between a type 1 hypervisor and a type 2 hypervisor is that a type 2 makes uses of a **host operating system** and its file system to
+create processes, store files, and so on. A type 1 hypervisor has no underlying support and must perform all these functions itself.
+
+After a type 2 hypervisor is started, it reads the installation CD-ROM (or CD-
+ROM image file) for the chosen **guest operating system** and installs the guest OS
+on a virtual disk, which is just a big file in the host operating system’s file system.
+Type 1 hypervisors cannot do this because there is no host operating system to
+store files on. They must manage their own storage on a raw disk partition.
+
+When the guest operating system is booted, it does the same thing it does on
+the actual hardware, typically starting up some background processes and then a
+GUI. To the user, the guest operating system behaves the same way it does when
+running on the bare metal even though that is not the case here.
+
+A different approach to handling control instructions is to modify the operating
+system to remove them. This approach is not true virtualization, but **paravirtualization**. We will discuss virtualization in more detail in Chap. 7.
+
+**The Java Virtual Machine**
+
+Another area where virtual machines are used, but in a somewhat different
+way, is for running Java programs. When Sun Microsystems invented the Java programming language, it also invented a virtual machine (i.e., a computer architecture) called the **JVM** ( **Java Virtual Machine** ). The Java compiler produces code
+for JVM, which then typically is executed by a software JVM interpreter. The advantage of this approach is that the JVM code can be shipped over the Internet to
+any computer that has a JVM interpreter and run there. If the compiler had pro-
+duced SPARC or x86 binary programs, for example, they could not have been
+shipped and run anywhere as easily. (Of course, Sun could have produced a compiler that produced SPARC binaries and then distributed a SPARC interpreter, but
+JVM is a much simpler architecture to interpret.) Another advantage of using JVM
+is that if the interpreter is implemented properly, which is not completely trivial,
+incoming JVM programs can be checked for safety and then executed in a protected environment so they cannot steal data or do any damage.
+
+## 1.7.6 Exokernels
+
+Rather than cloning the actual machine, as is done with virtual machines, another strategy is partitioning it, in other words, giving each user a subset of the resources. Thus one virtual machine might get disk blocks 0 to 1023, the next one
+might get blocks 1024 to 2047, and so on.
+
+At the bottom layer, running in kernel mode, is a program called the **exokernel**
+(Engler et al., 1995). Its job is to allocate resources to virtual machines and then
+check attempts to use them to make sure no machine is trying to use somebody
+else’s resources. Each user-level virtual machine can run its own operating system,
+as on VM/370 and the Pentium virtual 8086s, except that each one is restricted to
+using only the resources it has asked for and been allocated.
+
+The advantage of the exokernel scheme is that it saves a layer of mapping. In
+the other designs, each virtual machine thinks it has its own disk, with blocks running from 0 to some maximum, so the virtual machine monitor must maintain
+tables to remap disk addresses (and all other resources). With the exokernel, this
+remapping is not needed. The exokernel need only keep track of which virtual machine has been assigned which resource. This method still has the advantage of
+separating the multiprogramming (in the exokernel) from the user operating system
+code (in user space), but with less overhead, since all the exokernel has to do is
+keep the virtual machines out of each other’s hair.
+
+# 1.8 THE WORLD ACCORDING TO C
+
+Operating systems are normally large C (or sometimes C++) programs consisting of many pieces written by many programmers. The environment used for
+developing operating systems is very different from what individuals (such as students) are used to when writing small Java programs. This section is an attempt to
+give a very brief introduction to the world of writing an operating system for smalltime Java or Python programmers.
+
+## 1.8.1 The C Language
+
+This is not a guide to C, but a short summary of some of the key differences
+between C and languages like **Python** and especially Java. Java is based on C, so
+there are many similarities between the two. Python is somewhat different, but still
+fairly similar. For convenience, we focus on Java. Java, Python, and C are all
+imperative languages with data types, variables, and control statements, for ex-
+ample. The primitive data types in C are integers (including short and long ones),
+characters, and floating-point numbers. Composite data types can be constructed
+using arrays, structures, and unions. The control statements in C are similar to
+those in Java, including if, switch, for, and while statements. Functions and parameters are roughly the same in both languages.
+
+One feature C has that Java and Python do not is explicit pointers. A **pointer**
+is a variable that points to (i.e., contains the address of) a variable or data structure.
+Consider the statements
+```
+char c1, c2, *p;
+c1 = ’c’;
+p = &c1;
+c2 = *p;
+```
+which declare c1 and c2 to be character variables and p to be a variable that points
+to (i.e., contains the address of) a character. The first assignment stores the ASCII
+code for the character ‘‘c’’ in the variable c1. The second one assigns the address
+of c1 to  the  pointer  variable p. The  third  one  assigns  the  contents  of  the  variable
+pointed  to  by p to  the  variable c2, so after  these  statements  are  executed, c2 also
+contains the ASCII code for ‘‘c’’.  In theory, pointers are typed, so you are not supposed to assign the address of a floating-point number to a character pointer, but in
+practice  compilers  accept  such  assignments,  albeit  sometimes  with  a  warning.
+Pointers are a very powerful construct, but also a great source of errors when used
+carelessly.
+
+Some  things  that  C  does  not  have  include  built-in  strings,  threads,  packages,
+classes, objects, type safety, and garbage collection. The last one is a show stopper
+for  operating  systems. All  storage  in  C  is  either  static  or  explicitly  allocated  and
+released by the programmer, usually with the library functions malloc and free. It 
+is the latter property—total programmer control over memory—along with explicit
+pointers  that  makes  C  attractive  for  writing  operating  systems.  Operating  systems
+are basically real-time systems to some extent, even general-purpose ones. When
+an  interrupt  occurs,  the  operating  system  may  have  only  a  few microseconds  to
+perform some action or lose critical information. Having the garbage collector kick
+in at an arbitrary moment is intolerable.
+
+## 1.8.2  Header Files
+
+An operating system project generally consists of some number of directories,
+each  containing  many .c files  containing  the  code  for  some  part  of  the  system,
+along  with  some .h header  files  that  contain  declarations  and  definitions  used  by
+one or more code files. Header files can also include simple macros, such as
+
+#define BUFFER SIZE 4096
+
+which  allows  the  programmer  to  name  constants,  so  that  when BUFFER SIZE is
+used  in  the  code,  it  is  replaced  during  compilation  by  the  number  4096. Good  C
+programming  practice  is  to  name  every  constant  except  0,  1,  and −1,  and  sometimes even them. Macros can have parameters, such as
+
+#define max(a, b) (a > b ? a : b)
+
+which allows the programmer to write
+
+i = max(j, k+1)
+
+and get
+
+i = (j > k+1 ? j : k+1)
+
+to store the larger of j and k+1 in i. Headers can also contain conditional compila-
+tion, for example
+
+#ifdef X86
+intel int ack();
+#endif
+
+which compiles into a call to the function intel int ack if the macro X86 is defined
+and nothing otherwise. Conditional compilation is heavily used to isolate architecture-dependent code so that certain code is inserted only when the system is compiled  on  the  X86,  other  code  is  inserted  only  when  the  system  is  compiled  on  a
+SPARC, and so on. A .c file can bodily include zero or more header files using the
+#include directive. There  are  also  many header  files  that  are  common  to  nearly
+ev ery .c and are stored in a central directory.
+
+## 1.8.3 Large Programming Projects
+
+To build the operating system, each _.c_ is compiled into an **object file** by the C
+compiler. Object files, which have the suffix _.o_ , contain binary instructions for the
+target machine. They will later be directly executed by the CPU. There is nothing
+like Java byte code or Python byte code in the C world.
+
+The first pass of the C compiler is called the **C preprocessor**. As it reads each
+_.c_ file, every time it hits a _#include_ directive, it goes and gets the header file named
+in it and processes it, expanding macros, handling conditional compilation (and
+certain other things) and passing the results to the next pass of the compiler as if
+they were physically included.
+
+Since operating systems are very large (fiv e million lines of code is not
+unusual), having to recompile the entire thing every time one file is changed would
+be unbearable. On the other hand, changing a key header file that is included in
+thousands of other files does require recompiling those files. Keeping track of
+which object files depend on which header files is completely unmanageable without help.
+
+Fortunately, computers are very good at precisely this sort of thing. On UNIX
+systems, there is a program called _make_ (with numerous variants such as _gmake_ ,
+_pmake_ , etc.) that reads the _Makefile_ , which tells it which files are dependent on
+which other files. What _make_ does is see which object files are needed to build the
+operating system binary and for each one, check to see if any of the files it depends
+on (the code and headers) have been modified subsequent to the last time the object file was created. If so, that object file has to be recompiled. When _make_ has
+determined which _.c_ files have to recompiled, it then invokes the C compiler to recompile them, thus reducing the number of compilations to the bare minimum.
+In large projects, creating the _Makefile_ is error prone, so there are tools that do it
+automatically.
+
+Once all the _.o_ files are ready, they are passed to a program called the **linker** to
+combine all of them into a single executable binary file. Any library functions cal-
+led are also included at this point, interfunction references are resolved, and machine addresses are relocated as need be. When the linker is finished, the result is
+an executable program, traditionally called _a.out_ on UNIX systems. The various
+components of this process are illustrated in Fig. 1-30 for a program with three C
+files and two header files. Although we have been discussing operating system development here, all of this applies to developing any large program.
+
+<p align="center"><img src="img/fig1.30.png" width=35%></p>
+
+## 1.8.4 The Model of Run Time
+
+Once  the  operating  system  binary  has  been  linked,  the  computer  can  be
+rebooted and the new operating system started. Once running, it may dynamically
+load  pieces  that  were  not  statically  included  in  the  binary  such  as  device  drivers  and  file  systems. At  run  time  the  operating  system  may  consist  of  multiple  segments, for the text (the program code), the data, and the stack. The text segment is
+normally  immutable,  not  changing  during  execution. The data  segment  starts  out
+at a certain size and initialized with certain values, but it can change and grow as
+need be. The stack is initially empty but grows and shrinks as functions are called
+and  returned  from. Often  the  text  segment  is  placed  near  the  bottom  of  memory,
+the data segment just above it, with the ability to grow upward, and the stack segment  at  a  high  virtual  address,  with  the  ability  to  grow downward,  but  different
+systems work differently.
+
+In  all  cases,  the  operating  system  code  is  directly  executed  by  the  hardware,
+with no interpreter and no just-in-time compilation, as is normal with Java.
+
+# 1.9  RESEARCH ON OPERATING SYSTEMS
+
+Computer science is a rapidly advancing field and it is hard to predict where it
+is  going.  Researchers  at  universities  and  industrial  research  labs  are  constantly
+thinking up new ideas, some of which go nowhere but some of which become the
+cornerstone of future products and have massive impact on the industry and users.
+Telling  which  is  which  turns  out  to  be  easier  to  do  in  hindsight  than  in  real  time.
+Separating the wheat from the chaff is especially difficult because it often takes 20
+to 30 years from idea to impact.
+
+For example,  when  President  Eisenhower  set  up  the  Dept.  of  Defense’s Advanced  Research  Projects  Agency (ARPA)  in  1958,  he  was  trying  to  keep  the
+Army  from  killing  the  Navy  and  the  Air  Force  over the  Pentagon’s research  budget.  He was not trying to invent the Internet. But one of the things ARPA did was
+fund  some  university  research  on  the  then-obscure  concept  of  packet  switching,
+which  led  to  the  first  experimental  packet-switched  network,  the  ARPANET. It
+went live  in 1969.  Before long, other ARPA-funded research networks were connected to the ARPANET, and the Internet was born. The Internet was then happily
+used by academic researchers for sending email to each other for 20 years. In the
+early 1990s, Tim Berners-Lee invented the World Wide Web at the CERN research
+lab in Geneva and Marc Andreesen wrote a graphical browser for it at the University of Illinois. All of a sudden the Internet was full of twittering teenagers. President Eisenhower is probably rolling over in his grave.
+
+Research  in  operating  systems  has  also  led  to  dramatic  changes  in  practical
+systems.  As we discussed earlier, the first commercial computer systems were all
+batch  systems,  until  M.I.T. inv ented  general-purpose  timesharing  in  the  early
+1960s. Computers were  all  text-based  until  Doug  Engelbart  invented  the  mouse
+and  the  graphical  user  interface  at  Stanford  Research  Institute  in  the  late  1960s.
+Who knows what will come next?
+
+In this section and in comparable sections throughout the book, we will take a
+brief look at some of the research in operating systems that has taken place during the past 5 to 10 years, just to give a flavor of what might be on the horizon. This
+introduction is certainly not comprehensive. It is based largely on papers that have
+been published in the top research conferences because these ideas have at least
+survived a rigorous peer review process in order to get published. Note that in computer science—in contrast to other scientific fields—most research is published in
+conferences, not in journals. Most of the papers cited in the research sections were
+published by either ACM, the IEEE Computer Society, or USENIX and are available over the Internet to (student) members of these organizations. For more infor-
+mation about these organizations and their digital libraries, see
+
+
+ACM http://www.acm.org
+IEEE Computer Society http://www.computer.org
+USENIX http://www.usenix.org
+
+Virtually all operating systems researchers realize that current operating systems are massive, inflexible, unreliable, insecure, and loaded with bugs, certain
+ones more than others ( _names withheld here to protect the guilty_ ). Consequently,
+there is a lot of research on how to build better operating systems. Work has recently been published about bugs and debugging (Renzelmann et al., 2012; and Zhou et
+al., 2012), crash recovery (Correia et al., 2012; Ma et al., 2013; Ongaro et al.,
+2011; and Yeh and Cheng, 2012), energy management (Pathak et al., 2012; Pet-
+rucci and Loques, 2012; and Shen et al., 2013), file and storage systems (Elnably
+and Wang, 2012; Nightingale et al., 2012; and Zhang et al., 2013a), high-performance I/O (De Bruijn et al., 2011; Li et al., 2013a; and Rizzo, 2012), hyperthreading and multithreading (Liu et al., 2011), live update (Giuffrida et al., 2013),
+managing GPUs (Rossbach et al., 2011), memory management (Jantz et al., 2013;
+and Jeong et al., 2013), multicore operating systems (Baumann et al., 2009; Kapritsos, 2012; Lachaize et al., 2012; and Wentzlaff et al., 2012), operating system correctness (Elphinstone et al., 2007; Yang et al., 2006; and Klein et al., 2009), operating system reliability (Hruby et al., 2012; Ryzhyk et al., 2009, 2011 and Zheng et
+al., 2012), privacy and security (Dunn et al., 2012; Giuffrida et al., 2012; Li et al.,
+2013b; Lorch et al., 2013; Ortolani and Crispo, 2012; Slowinska et al., 2012; and
+Ur et al., 2012), usage and performance monitoring (Harter et. al, 2012; and Ravindranath et al., 2012), and virtualization (Agesen et al., 2012; Ben-Yehuda et al.,
+2010; Colp et al., 2011; Dai et al., 2013; Tarasov et al., 2013; and Williams et al.,
+2012) among many other topics.
+
+### 1.10 OUTLINE OF THE REST OF THIS BOOK
+
+We have now completed our introduction and bird’s-eye view of the operating
+system. It is time to get down to the details. As mentioned already, from the programmer’s point of view, the primary purpose of an operating system is to provide 
+some key abstractions, the most important of which are processes and threads, address  spaces,  and  files.  Accordingly  the  next  three  chapters  are  devoted  to  these
+critical topics.
+
+Chapter 2 is about processes and threads. It discusses their properties and how
+they communicate  with  one  another. It also  gives a number  of  detailed  examples
+of how interprocess communication works and how to avoid some of the pitfalls.
+
+In  Chap.  3  we  will  study  address  spaces  and  their  adjunct,  memory  management, in detail. The important topic of virtual memory will be examined, along
+with closely related concepts such as paging and segmentation.
+
+Then, in Chap. 4, we come to the all-important topic of file systems. To  a  considerable extent, what the user sees is largely the file system. We  will look at both
+the file-system interface and the file-system implementation.
+
+Input/Output is covered in Chap. 5. The concepts of device independence and
+device  dependence  will  be  looked  at.  Several  important  devices,  including  disks,
+keyboards, and displays, will be used as examples.
+
+Chapter  6  is  about  deadlocks. We  briefly  showed  what  deadlocks  are  in  this
+chapter, but  there  is  much  more  to  say. Ways  to  prevent  or  avoid  them  are  discussed.
+
+At  this  point  we  will  have  completed  our  study  of  the  basic  principles  of  sin-
+gle-CPU  operating  systems.  However,  there  is  more  to  say, especially  about  advanced  topics. In  Chap.  7,  we  examine  virtualization.  We discuss  both  the  prin-
+ciples,  and  some  of  the  existing  virtualization  solutions  in  detail.  Since  virtu-
+alization is heavily used in cloud computing, we will also gaze at existing clouds.
+Another  advanced  topic  is  multiprocessor  systems,  including  multicores,  parallel
+computers, and distributed systems. These subjects are covered in Chap. 8.
+
+A hugely  important  subject  is  operating  system  security, which  is  covered  in
+Chap  9. Among  the  topics  discussed  in  this  chapter  are  threats  (e.g.,  viruses  and
+worms), protection mechanisms, and security models.
+
+Next  we  have  some  case  studies  of  real  operating  systems.  These  are  UNIX,
+Linux,  and  Android  (Chap.  10),  and  Windows  8  (Chap.  11). The  text  concludes
+with some wisdom and thoughts about operating system design in Chap. 12.
+
+## 1.11  METRIC UNITS
+
+To  avoid  any confusion,  it  is  worth  stating  explicitly  that  in  this  book,  as  in
+computer  science  in  general,  metric  units  are  used  instead  of  traditional  English
+units (the furlong-stone-fortnight system). The principal metric prefixes are listed
+in  Fig. 1-31. The prefixes  are  typically  abbreviated  by  their  first  letters,  with  the
+units greater than 1 capitalized. Thus a 1-TB database occupies 1012 bytes of storage  and  a  100-psec  (or  100-ps)  clock  ticks  every  10−10 seconds.  Since  milli  and
+micro both begin with the letter ‘‘m,’’  a  choice had to be made. Normally, ‘‘m’’ is
+for milli and ‘‘μ’’  (the Greek letter mu) is for micro.
+
+<p align="center"><img src="img/fig1.31.png" width=35%></p>
+
+It  is  also  worth  pointing  out  that,  in  common  industry  practice,  the  units  for
+measuring  memory  sizes  have  slightly  different  meanings.  There  kilo  means  210
+(1024) rather than 103 (1000) because memories are always a power of two. Thus a
+1-KB  memory  contains  1024  bytes,  not  1000  bytes. Similarly, a 1-MB  memory
+contains  220 (1,048,576)  bytes  and  a  1-GB  memory  contains  230 (1,073,741,824)
+bytes. However, a 1-Kbps communication line transmits 1000 bits per second and a
+10-Mbps LAN runs at 10,000,000 bits/sec because these speeds are not powers of
+two. Unfortunately, many people tend to mix up these two systems, especially for
+disk sizes. To  avoid ambiguity, in this book, we will use the symbols KB, MB, and
+GB for 210, 2 20, and 230 bytes respectively, and the symbols Kbps, Mbps, and Gbps
+for 103, 10 6, and 109 bits/sec, respectively.
+
+## 1.12  SUMMARY
+
+Operating systems can be viewed from two viewpoints: resource managers and
+extended machines. In the resource-manager view,  the operating system’s job is to
+manage the different parts of the system efficiently. In the extended-machine view,
+the  job  of  the  system  is  to  provide  the  users  with  abstractions  that  are  more  convenient  to  use  than  the  actual  machine.  These  include  processes,  address  spaces,
+and files.
+
+Operating  systems  have  a  long  history, starting  from  the  days  when  they replaced  the  operator, to modern  multiprogramming  systems.  Highlights  include
+early batch systems, multiprogramming systems, and personal computer systems.
+
+Since  operating  systems  interact  closely  with  the  hardware,  some  knowledge
+of  computer  hardware  is  useful  to  understanding  them.  Computers  are  built  up  of
+processors, memories, and I/O devices.  These parts are connected by buses.
+
+The  basic  concepts  on  which  all  operating  systems  are  built  are  processes,
+memory management, I/O management, the file system, and security. Each of these
+will be treated in a subsequent chapter.
+
+The heart of any operating system is the set of system calls that it can handle.
+These  tell  what  the  operating  system  really  does. For UNIX,  we  have  looked  at
+four groups of system calls. The first group of system calls relates to process creation and termination. The second group is for reading and writing files. The third
+group is for directory management. The fourth group contains miscellaneous calls.
+
+Operating systems can be structured in several ways. The most common ones
+are as a monolithic system, a hierarchy of layers, microkernel, client-server, virtual
+machine, or exokernel.
+
+PROBLEMS
+
+1. What are the two main functions of an operating system?
+2. In  Section  1.4,  nine  different  types  of  operating  systems  are  described. Give  a  list  of
+applications for each of these systems (one per operating systems type).
+3. What is the difference between timesharing and multiprogramming systems?
+4. To  use  cache  memory, main  memory  is  divided  into  cache  lines,  typically  32  or  64
+bytes long. An entire cache line is cached at once. What is the advantage of caching an
+entire line instead of a single byte or word at a time?
+5. On early computers, every byte of data read or written was handled by the CPU (i.e.,
+there was no DMA). What implications does this have for multiprogramming?
+6. Instructions  related  to  accessing  I/O  devices  are  typically  privileged  instructions,  that
+is, they can be executed in kernel mode but not in user mode. Give a reason why these
+instructions are privileged.
+7. The  family-of-computers  idea  was  introduced  in  the  1960s  with  the  IBM  System/360
+mainframes.  Is this idea now dead as a doornail or does it live on?
+8. One reason GUIs were initially slow to be adopted was the cost of the hardware needed  to  support  them.  How much  video  RAM  is  needed  to  support  a  25-line × 80-row
+character monochrome text screen? How much for a 1200 × 900-pixel 24-bit color bitmap?  What was the cost of this RAM at 1980 prices ($5/KB)? How much is it now?
+9. There are several design goals in building an operating system, for example, resource
+utilization, timeliness, robustness, and so on. Give an example of two design goals that
+may contradict one another.
+10. What is the difference between kernel and user mode? Explain how having two distinct
+modes aids in designing an operating system.
+11. A 255-GB disk has 65,536 cylinders with 255 sectors per track and 512 bytes per sector. How  many platters and heads does this disk have? Assuming an average cylinder
+seek time of 11 ms, average rotational delay of 7 msec and reading rate of 100 MB/sec,
+calculate the average time it will take to read 400 KB from one sector.
+12. Which of the following instructions should be allowed only in kernel mode?
+(a) Disable all interrupts.
+(b) Read the time-of-day clock.
+(c) Set the time-of-day clock.
+(d) Change the memory map.
+13. Consider a system that has two CPUs, each CPU having two threads (hyperthreading).
+Suppose  three  programs, P0, P1, and P2, are  started  with  run  times  of  5,  10  and  20
+msec, respectively. How long will it take to complete the execution of these programs?
+Assume that all three programs are 100% CPU bound, do not block during execution,
+and do not change CPUs once assigned.
+14. A computer  has  a  pipeline  with  four  stages.  Each  stage  takes  the  same  time  to  do  its
+work, namely, 1 nsec.  How many instructions per second can this machine execute?
+15. Consider  a  computer  system  that  has  cache  memory, main  memory  (RAM)  and  disk,
+and  an  operating  system  that  uses  virtual  memory. It takes  1  nsec  to  access  a  word
+from the cache, 10 nsec to access a word from the RAM, and 10 ms to access a word
+from  the  disk.  If  the  cache  hit  rate  is  95%  and  main  memory  hit  rate  (after  a  cache
+miss) is 99%, what is the average time to access a word?
+16. When  a  user  program  makes  a  system  call  to  read  or  write  a  disk  file,  it  provides  an
+indication of which file it wants, a pointer to the data buffer, and the count. Control is
+then  transferred  to  the  operating  system,  which  calls  the  appropriate  driver.  Suppose
+that  the  driver starts  the  disk  and  terminates  until  an  interrupt  occurs. In  the  case  of
+reading from the disk, obviously the caller will have  to be blocked (because there are
+no data for it). What about the case of writing to the disk? Need the caller be blocked
+awaiting completion of the disk transfer?
+17. What is a trap instruction? Explain its use in operating systems.
+18. Why is the process table needed in a timesharing system? Is it also needed in personal
+computer systems running UNIX or Windows with a single user?
+19. Is there any reason why you might want to mount a file system on a nonempty directory?  If so, what is it?
+20. For each of the following system calls, give a condition that causes it to fail: fork, exec,
+and unlink.
+21. What type of multiplexing (time, space, or both) can be used for sharing the following
+resources: CPU, memory, disk, network card, printer, keyboard, and display?
+22. Can the
+
+```
+count = write(fd, buffer, nbytes);
+```
+
+call return any value in count other than nbytes? If so, why?
+23. A file whose file descriptor is fd contains the following sequence of bytes: 3, 1, 4, 1, 5,
+9, 2, 6, 5, 3, 5. The following system calls are made:
+```
+lseek(fd, 3, SEEK SET);
+```
+```
+read(fd, &buffer, 4);
+```
+
+where the lseek call makes a seek to byte 3 of the file. What does buffer contain after
+the read has completed?
+
+24. Suppose that a 10-MB file is stored on a disk on the same track (track 50) in consecutive sectors. The disk arm is currently situated over track number 100. How long will
+it take to retrieve this file from the disk? Assume that it takes about 1 ms to move the
+arm from one cylinder to the next and about 5 ms for the sector where the beginning of
+the file is stored to rotate under the head. Also, assume that reading occurs at a rate of
+200 MB/s.
+
+25. What  is  the  essential  difference  between  a  block  special  file  and  a  character  special
+file?
+
+26. In the example given in Fig. 1-17, the library procedure is called read and the system
+call itself is called read. Is it essential that both of these have the same name? If not,
+which one is more important?
+
+27. Modern operating systems decouple a process address space from the machine’s physical memory. List two advantages of this design.
+
+28. To  a  programmer, a system  call  looks  like any  other  call  to  a  library  procedure. Is  it
+important  that  a  programmer  know which  library  procedures  result  in  system  calls?
+Under what circumstances and why?
+
+29. Figure  1-23  shows  that  a  number  of  UNIX  system  calls  have  no Win32  API  equivalents. For each of the calls listed as having no Win32 equivalent, what are the consequences for a programmer of converting a UNIX program to run under Windows?
+
+30. A portable operating system is one that can be ported from one system architecture to
+another  without  any modification.  Explain  why it is infeasible  to  build  an  operating
+system that is completely portable. Describe two high-level layers that you will have in
+
+designing an operating system that is highly portable.
+31. Explain  how separation  of  policy and  mechanism  aids  in  building  microkernel-based
+operating systems.
+
+32. Virtual  machines  have  become  very  popular  for  a  variety  of  reasons. Nevertheless,
+they hav e some downsides. Name one.
+
+33. Here are some questions for practicing unit conversions:
+(a) How long is a nanoyear in seconds?
+(b) Micrometers are often called microns. How long is a megamicron?
+(c) How many bytes are there in a 1-PB memory?
+(d) The mass of the earth is 6000 yottagrams. What is that in kilograms?
+
+34. Write a shell that is similar to Fig. 1-19 but contains enough code that it actually works
+so  you  can  test  it.  You  might  also  add  some  features  such  as  redirection  of  input  and
+output, pipes, and background jobs.
+
+35. If you have  a  personal UNIX-like system (Linux, MINIX 3, FreeBSD, etc.) available
+that  you  can  safely  crash  and  reboot,  write  a  shell  script  that  attempts  to  create  an
+unlimited  number  of  child  processes  and  observe what  happens.  Before  running  the
+experiment,  type sync to  the  shell  to  flush  the  file  system  buffers  to  disk  to  avoid ruining  the  file  system. You can  also  do  the  experiment  safely  in  a  virtual  machine.
+
+**Note**: Do not try this on a shared system without first getting permission from the system administrator. The consequences will be instantly obvious so you are likely to be
+caught and sanctions may follow
+
+36. Examine and try to interpret the contents of a UNIX-like or Windows directory with a
+tool like the UNIX od program.  (Hint: How you do this will depend upon what the OS
+allows. One trick that may work is to create a directory on a USB stick with one operating system and then read the raw device data using a different operating system that
+allows such access.)
+2
 
 
