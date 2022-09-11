@@ -2773,6 +2773,5 @@ caught and sanctions may follow
 tool like the UNIX od program.  (Hint: How you do this will depend upon what the OS
 allows. One trick that may work is to create a directory on a USB stick with one operating system and then read the raw device data using a different operating system that
 allows such access.)
-2
 
 
