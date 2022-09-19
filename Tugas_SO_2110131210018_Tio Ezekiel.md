@@ -41,5 +41,5 @@ Sistem operasi juga akan bertanggungjawab pada aktivitas yang berkaitan erat den
 
 Managemen sistem Input dan output juga sering disebut dengan device manager. Hal ini juga akan menyediakan device driver yang biasa, yang mana nantinya operasi input dan output bisa seragam (membaca, membuka, menulis maupun menutup).
 
-
+<p align="center"><img src="img/device_manager.png" width=25% alt="gambar device manager"></p>
 
