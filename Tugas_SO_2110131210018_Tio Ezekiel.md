@@ -1,9 +1,4 @@
- **Tio Ezekiel**
-
- **2110131210018**
-
- **Tugas 2 Sistem Operasi**
-
+ 
  ><h1> Komponen Sistem Operasi</h1>
 
  <h2>1. Manajemen Proses</h2>
@@ -31,7 +26,7 @@ Tanggung jawab sistem operasi pada manajemen memori yaitu:
 - Dapat mengalokasikan dan juga mengdealokasikan ruang memorinya yang disesuaikan degan kebutuhan.
 - Dapat menjaga track dari memori yang tengah digunakan dan siapapun yang dapat menggunakannya.
 
-<h2>3. Manajemen Secondary Storage</h2>
+<h2>3. Manajemen Secondary Memory</h2>
 
 Data yang sudah disimpan kedalam memori utama memiliki sifat yang sementara dan juga jumlahnya dangatlah kecil. Maka dari itu, Untuk dapat menyimpan seluruh data dan juga program yang ada di komputer sangat dibutuhkan secondary-storage.
 
@@ -48,4 +43,3 @@ Managemen sistem Input dan output juga sering disebut dengan device manager. Hal
 
 
 
-<p align="center"><img src="img/device_manager.png" width=25% alt="gambar device manager"></p>
