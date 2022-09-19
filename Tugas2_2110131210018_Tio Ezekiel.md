@@ -22,7 +22,7 @@ Memori utama juga sering disebut juga dengan memoriyaitu suatu array yang besar 
 
 Memori tersebut juga memiliki fungsi yaitu untuk menjadi tempat dari penyimpanan yang suatu akses datanya dapat digunakan oleh sebuah CPU maupun perangkat input dan output. Memori ini juga termasuk sebagai tempat penyimpanan yang volatile atau sementara. Hal itu berarti datanya dapat hilang pada saat sistemnya dimatikan.
 
-<p align="center"><img src="img/Task_Manager_Ram.png" alt="gambar task manager ram" width=45%></p>
+<p align="center"><img src="img/Task_Manager_RAM.png" alt="gambar task manager ram" width=45%></p>
 
 Tanggung jawab sistem operasi pada manajemen memori yaitu:
 - Dapat memilih program yang hendak di load ke dalam memori.
@@ -40,3 +40,4 @@ Dimana secondary-storage tersebut memiliki sifat yang permanen dan juga dapat me
 
 Sistem operasi juga akan bertanggungjawab pada aktivitas yang berkaitan erat dengan disk managemen. Contohnya seperti alokasi penyimpanan, penjadwalan disk, dan juga free-space management.
 
+><h1>Layanan Sistem Operasi</h1>
