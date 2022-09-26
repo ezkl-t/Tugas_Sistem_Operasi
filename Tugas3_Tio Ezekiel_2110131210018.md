@@ -10,13 +10,16 @@ Sedangkan UNIX lebih berfokus pada setiap prosedur dapat memanggil prosedur lain
 
 **Kelebihan yang dimiliki oleh system monolithic adalah akses layanannya lebih cepat karena dilakukan pada satu tempat.**
 
+
 >## B. Struktur Berlapis (Layered Systems)
 
 Sistem operasi memiliki sistem layer. Maksudnya adalah sistem operasi terdiri dari beragam layer mulai dari bahwa hingga atas. Sehingga masing-masing layer memiliki tujuan dan fungsi masing-masing.
 
 Lapisan layer paling bawah biasa digunakan sebagai perangkat keras, sedangkan lapiran layer paling atas digunakan sebagai user-interface. Adanya struktur berlayer ini digunakan untuk mengurangi kompleksitas rancangan dari implementasi sistem operasi.
 
-***Setiap lapisan layer dari struktur tersebut merupakan hasil implementasi dari objek abstrak. Dimana hasil implementasi tersebut merupakan enkapsulasi data dan operasi yang bisa dimanipulasi*.**
+
+**Setiap lapisan layer dari struktur tersebut merupakan hasil implementasi dari objek abstrak. Dimana hasil implementasi tersebut merupakan enkapsulasi data dan operasi yang bisa dimanipulasi.**
+
 
 Agar lebih jelas, berikut jenis layer yang digunakan dalam sistem operasi:
 
