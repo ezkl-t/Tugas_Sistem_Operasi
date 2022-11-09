@@ -43,5 +43,5 @@ Pada bagian ini berhubungan dengan pengguna aplikasi komputer (end-user). Sehing
 
 >## C. Mikro Kernel
 
-Fungsi dari kernel mikro ini adalah untuk mempermudah komunikasi yang terjadi antara program client dengan beragam layanan yang terdapat pda ruang user. Sehingga dengan adanya kernel mikro ini dapat mempermudah dan memperluas sistem operasi, dan mudah ketika akan diubah (transformasi) ke arsitektur yang lebih baru. Selain itu, dengan menggunakan kernel mikro, kode program akan aman karena lebih kecil.
+Fungsi dari kernel mikro ini adalah untuk mempermudah komunikasi yang terjadi antara program client dengan beragam layanan yang terdapat pda ruang user. Sehingga dengan adanya kernel mikro ini dapat mempermudah dan memperluas sistem operasi, dan mudah ketika akan diubah (transformasi) ke arsitektur yang lebih baru. Selain itu, dengan menggunakan kernel mikro, kode program akan aman karena ukurannya lebih kecil
 
